@@ -41,6 +41,12 @@ const vouchCommand = new SlashCommandBuilder()
 client.once('ready', async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
+  // Set custom status
+  client.user.setPresence({
+    activities: [{ name: '⭐ ogsware.com', type: 3 }], // Watching ogsware.com
+    status: 'online'
+  });
+
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   try {
     await rest.put(Routes.applicationGuildCommands(client.user.id, GUILD_ID), {
