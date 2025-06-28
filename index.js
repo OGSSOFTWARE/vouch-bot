@@ -5,9 +5,7 @@ const {
   REST,
   Routes,
   SlashCommandBuilder,
-  EmbedBuilder,
-  StringSelectMenuBuilder,
-  ActionRowBuilder
+  EmbedBuilder
 } = require('discord.js');
 
 const { TOKEN, GUILD_ID, VOUCH_LOG_CHANNEL_ID } = process.env;
@@ -38,28 +36,36 @@ const vouchCommand = new SlashCommandBuilder()
       .setDescription('Attach proof image (optional)')
       .setRequired(false));
 
+async function registerCommands() {
+  const rest = new REST({ version: '10' }).setToken(TOKEN);
+  try {
+    await rest.put(
+      Routes.applicationGuildCommands(client.user.id, GUILD_ID),
+      { body: [vouchCommand.toJSON()] }
+    );
+    console.log('✅ Slash command registered.');
+  } catch (err) {
+    console.error('❌ Failed to register command:', err);
+  }
+}
+
 client.once('ready', async () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 
   // Set custom status
   client.user.setPresence({
-    activities: [{ name: '⭐ ogsware.com', type: 3 }], // Watching ogsware.com
+    activities: [{ name: '⭐ ogsware.com', type: 3 }],
     status: 'online'
   });
 
-  const rest = new REST({ version: '10' }).setToken(TOKEN);
-  try {
-    await rest.put(Routes.applicationGuildCommands(client.user.id, GUILD_ID), {
-      body: [vouchCommand.toJSON()],
-    });
-    console.log('✅ Slash command registered.');
-  } catch (err) {
-    console.error('❌ Failed to register command:', err);
-  }
+  // Only call this if you change command structure
+  await registerCommands();
 });
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand() || interaction.commandName !== 'vouch') return;
+
+  console.log(`📥 Vouch command received from ${interaction.user.tag}`);
 
   const message = interaction.options.getString('message');
   const starStr = interaction.options.getString('stars');
