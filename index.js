@@ -10,6 +10,8 @@ const {
 
 const { TOKEN, GUILD_ID, VOUCH_LOG_CHANNEL_ID } = process.env;
 
+console.log('🔁 Bot process started or restarted');
+
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 // Define /vouch command
@@ -58,14 +60,17 @@ client.once('ready', async () => {
     status: 'online'
   });
 
-  // Only call this if you change command structure
+  // Register slash command only when you change it
   await registerCommands();
 });
+
+// Remove any previous duplicate listeners to avoid multiple event triggers
+client.removeAllListeners('interactionCreate');
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand() || interaction.commandName !== 'vouch') return;
 
-  console.log(`📥 Vouch command received from ${interaction.user.tag}`);
+  console.log(`📥 Vouch command triggered by ${interaction.user.tag} at ${new Date().toISOString()}`);
 
   const message = interaction.options.getString('message');
   const starStr = interaction.options.getString('stars');
@@ -116,6 +121,19 @@ client.on('interactionCreate', async interaction => {
   } else {
     console.warn('⚠️ Vouch log channel not found. Check your .env config.');
   }
+});
+
+// Ensure no duplicate running processes
+process.on('SIGINT', () => {
+  console.log('🛑 Bot shutting down gracefully (SIGINT)');
+  client.destroy();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('🛑 Bot shutting down gracefully (SIGTERM)');
+  client.destroy();
+  process.exit(0);
 });
 
 client.login(TOKEN);
